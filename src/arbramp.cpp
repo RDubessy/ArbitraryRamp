@@ -20,7 +20,6 @@
 #include "renderramp.h"
 #include "arbramp.h"
 #include "ui_arbramp.h"
-
 ArbRamp::ArbRamp(QWidget *parent) : QMainWindow(parent), ui(new Ui::ArbRamp) {
     ui->setupUi(this);
     curLine=-1;
@@ -29,8 +28,9 @@ ArbRamp::ArbRamp(QWidget *parent) : QMainWindow(parent), ui(new Ui::ArbRamp) {
     ui->scrollArea->setWidget(render);
     delegate=new RampDelegate(ui->tableWidget);
     ui->tableWidget->setItemDelegate(delegate);
-    readSettings();
     setCurrentFile("");
+    curDir="";
+    readSettings();
     addAction=new QAction(tr("Insert"),this);
     delAction=new QAction(tr("Delete"),this);
     updateAction=new QAction(tr("Update view"),this);
@@ -45,17 +45,19 @@ ArbRamp::ArbRamp(QWidget *parent) : QMainWindow(parent), ui(new Ui::ArbRamp) {
     connect(ui->action_Open,SIGNAL(triggered()),this,SLOT(open()));
     connect(ui->actionNew,SIGNAL(triggered()),this,SLOT(newRamp()));
     connect(ui->action_Export,SIGNAL(triggered()),this,SLOT(exportRamp()));
-    connect(ui->mainToolBar,SIGNAL(actionTriggered(QAction*)),this,SLOT(chooseAction(QAction*)));
-    connect(this,SIGNAL(renderUpdate(QList<QPoint>)),render,SLOT(updatePoints(QList<QPoint>)));
-    connect(ui->tableWidget,SIGNAL(currentCellChanged(int,int,int,int)),this,SLOT(currentLine(int,int,int,int)));
-    show();         //So that wasModified has access to the real size of the RenderRamp object.
+    connect(ui->mainToolBar,SIGNAL(actionTriggered(QAction*)),this,
+            SLOT(chooseAction(QAction*)));
+    connect(this,SIGNAL(renderUpdate(QList<QPoint>)),render,
+            SLOT(updatePoints(QList<QPoint>)));
+    connect(ui->tableWidget,SIGNAL(currentCellChanged(int,int,int,int)),this,
+            SLOT(currentLine(int,int,int,int)));
+    //So that wasModified has access to the real size of the RenderRamp object.
+    show();
     wasModified();
 }
-
 ArbRamp::~ArbRamp() {
     delete ui;
 }
-
 void ArbRamp::closeEvent(QCloseEvent *event) {
     if(maybeSave()) {
         writeSettings();
@@ -64,7 +66,6 @@ void ArbRamp::closeEvent(QCloseEvent *event) {
         event->ignore();
     }
 }
-
 void ArbRamp::changeEvent(QEvent *e) {
     QMainWindow::changeEvent(e);
     switch (e->type()) {
@@ -75,11 +76,9 @@ void ArbRamp::changeEvent(QEvent *e) {
         break;
     }
 }
-
 void ArbRamp::resizeEvent(QResizeEvent *) {
     wasModified();
 }
-
 void ArbRamp::chooseAction(QAction *action) {
     if(action==addAction)
         addPoint();
@@ -89,7 +88,6 @@ void ArbRamp::chooseAction(QAction *action) {
         curLine=-1;
     wasModified();
 }
-
 void ArbRamp::addPoint() {
     int row=(curLine==-1 ? nLines : curLine+1);
     ui->tableWidget->insertRow(row);
@@ -113,7 +111,6 @@ void ArbRamp::addPoint() {
     ui->tableWidget->setItem(row,2,type);
     nLines++;
 }
-
 void ArbRamp::delPoint() {
     if(nLines>0) {
         int row=(nLines==1 ? 0 : (curLine==-1 ? nLines-1 : curLine));
@@ -123,12 +120,10 @@ void ArbRamp::delPoint() {
     if(nLines==0)
         curLine=-1;
 }
-
 void ArbRamp::about() {
    QMessageBox::about(this, tr("About Arbitrary Ramp"),
             tr("The <b>Arbitrary Ramp</b> application."));
 }
-
 void ArbRamp::newRamp() {
     for(int i=0;i<nLines;i++)
         ui->tableWidget->removeRow(0);
@@ -136,7 +131,6 @@ void ArbRamp::newRamp() {
     curFile="";
     wasModified();
 }
-
 void ArbRamp::wasModified() {
     isModified=true;
     QList<QPoint> points;
@@ -144,20 +138,22 @@ void ArbRamp::wasModified() {
     if(nLines>0)
         tMax=ui->tableWidget->item(nLines-1,0)->text().toDouble();
     for(int i=0;i<nLines;i++) {
-        int x=(int)(render->width()*ui->tableWidget->item(i,0)->text().toDouble()/tMax);
-        int y=(int)(render->height()*(1.0-ui->tableWidget->item(i,1)->text().toDouble()/1e2));
+        int x=(int)(render->width()*ui->tableWidget->item(i,0)->text()
+                    .toDouble()/tMax);
+        int y=(int)(render->height()*(1.0-ui->tableWidget->item(i,1)->text()
+                                      .toDouble()/1e2));
         points << QPoint(x,y);
     }
     emit renderUpdate(points);
 }
-
 bool ArbRamp::maybeSave() {
     if(isModified && nLines>0) {
         QMessageBox::StandardButton ret;
         ret = QMessageBox::warning(this, tr("Arbitrary Ramp"),
                      tr("The ramp has been modified.\n"
                         "Do you want to save your changes?"),
-                     QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+                     QMessageBox::Save | QMessageBox::Discard |
+                     QMessageBox::Cancel);
         if (ret == QMessageBox::Save)
             return save();
         else if (ret == QMessageBox::Cancel)
@@ -165,7 +161,6 @@ bool ArbRamp::maybeSave() {
     }
     return true;
 }
-
 bool ArbRamp::save() {
     if(curFile.isEmpty()) {
         return saveAs();
@@ -173,27 +168,25 @@ bool ArbRamp::save() {
         return saveRamp(curFile);
     }
 }
-
 bool ArbRamp::saveAs() {
-    QString fileName = QFileDialog::getSaveFileName(this);
+    QString fileName = QFileDialog::getSaveFileName(
+            this,tr("Save Ramp"),curDir,tr("Ramp definitions (*.rmp)"));
     if(fileName.isEmpty())
         return false;
     return saveRamp(fileName);
 }
-
 bool ArbRamp::open() {
-    QString fileName = QFileDialog::getOpenFileName(this);
+    QString fileName = QFileDialog::getOpenFileName(
+            this,tr("Open Ramp"),curDir,tr("Ramp definition (*.rmp)"));
     if(fileName.isEmpty()||!readRamp(fileName))
         return false;
     wasModified();
     isModified=false;
     return true;
 }
-
 void ArbRamp::currentLine(int row, int, int, int) {
     curLine=row;
 }
-
 bool ArbRamp::saveRamp(const QString &fileName) {
     QFile file(fileName);
     if (!file.open(QFile::WriteOnly | QFile::Text)) {
@@ -214,7 +207,6 @@ bool ArbRamp::saveRamp(const QString &fileName) {
     statusBar()->showMessage(tr("File saved"), 2000);
     return true;
 }
-
 bool ArbRamp::readRamp(const QString &fileName) {
     QFile file(fileName);
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
@@ -246,43 +238,51 @@ bool ArbRamp::readRamp(const QString &fileName) {
     statusBar()->showMessage(tr("Ramp loaded"), 2000);
     return true;
 }
-
 void ArbRamp::setCurrentFile(const QString &fileName)
  {
      curFile = fileName;
+     QStringList dir=fileName.split("/");
+     if(dir.size()==1)
+         curDir="/";
+     else {
+         dir.removeLast();
+         curDir=dir.join("/");
+     }
      isModified=false;
      QString shownName = curFile;
      if (curFile.isEmpty())
          shownName = "untitled.txt";
      setWindowFilePath(shownName);
  }
-
 void ArbRamp::readSettings()
 {
     QSettings settings("R. Dubessy", "Arbitrary Ramp");
+    curDir=settings.value("curDir","").toString();
     nLines=settings.value("nLines", 0).toInt();
     for(int i=0;i<nLines;i++) {
         ui->tableWidget->insertRow(i);
-        QTableWidgetItem *time=new QTableWidgetItem(settings.value(tr("time%1").arg(i),"0").toString());
+        QTableWidgetItem *time=new QTableWidgetItem(
+                settings.value(tr("time%1").arg(i),"0").toString());
         ui->tableWidget->setItem(i,0,time);
-        QTableWidgetItem *frequency=new QTableWidgetItem(settings.value(tr("frequency%1").arg(i),"1000").toString());
+        QTableWidgetItem *frequency=new QTableWidgetItem(
+                settings.value(tr("frequency%1").arg(i),"1000").toString());
         ui->tableWidget->setItem(i,1,frequency);
-        QTableWidgetItem *type=new QTableWidgetItem(settings.value(tr("type%1").arg(i),"Linear").toString());
+        QTableWidgetItem *type=new QTableWidgetItem(
+                settings.value(tr("type%1").arg(i),"Linear").toString());
         ui->tableWidget->setItem(i,2,type);
     }
 }
-
 void ArbRamp::writeSettings()
 {
     QSettings settings("R. Dubessy", "Arbitrary Ramp");
     settings.setValue("nLines",nLines);
+    settings.setValue("curDir",curDir);
     for(int i=0;i<nLines;i++) {
         settings.setValue(tr("time%1").arg(i),ui->tableWidget->item(i,0)->text());
         settings.setValue(tr("frequency%1").arg(i),ui->tableWidget->item(i,1)->text());
         settings.setValue(tr("type%1").arg(i),ui->tableWidget->item(i,2)->text());
     }
 }
-
 bool ArbRamp::exportRamp() {
     if(nLines<2) {
         QMessageBox::warning(this,tr("Export Ramp"),
@@ -293,12 +293,14 @@ bool ArbRamp::exportRamp() {
     bool ok;
     QStringList items;
     items << "Front Panel" << "Rear Panel";
-    QString output=QInputDialog::getItem(this,tr("Export Ramp"),tr("Choose output:"),items,1,false,&ok);
+    QString output=QInputDialog::getItem(
+            this,tr("Export Ramp"),tr("Choose output:"),items,1,false,&ok);
     if(ok) {
-        QString fileName = QFileDialog::getSaveFileName(this);
+        QString fileName=QFileDialog::getSaveFileName(
+                this,tr("Export Ramp"),curDir,
+                tr("Ascii delimited file (*.asf)"));
         if(fileName.isEmpty()||!rearPanelRamp(fileName))
             return false;
-
         return true;
     }
     return false;

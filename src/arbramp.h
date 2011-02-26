@@ -47,16 +47,17 @@ private:
     void readSettings();
     void writeSettings();
 
-    QString curFile;
+    QString curFile;            //!<\brief Current output file name.
+    QString curDir;             //!<\brief Cuurent output directory.
     RenderRamp *render;
     RampDelegate *delegate;
     Ui::ArbRamp *ui;
     QAction *addAction;
     QAction *delAction;
     QAction *updateAction;
-    int nLines;
-    int curLine;
-    bool isModified;
+    int nLines;                 //!<\brief Number of frequency points.
+    int curLine;                //!<\brief Current line index.
+    bool isModified;            //!<\brief Modification tracking flag.
 };
 
 #endif // ARBRAMP_H
