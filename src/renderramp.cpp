@@ -41,8 +41,8 @@ void RenderRamp::updatePoints(const QList<QPoint> &p) {
         points=new QPoint[nPoints];
         for(int i=0;i<nPoints;i++)
             points[i]=p.at(i);
-        update();
     }
+    update();
 }
 
 void RenderRamp::paintEvent(QPaintEvent */*event*/) {
