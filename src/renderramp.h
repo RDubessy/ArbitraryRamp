@@ -30,3 +30,4 @@ private:
 };
 
 #endif // RENDERRAMP_H
+/* renderramp.h */

@@ -3,6 +3,7 @@
 #define ARBRAMP_H
 
 #include <QMainWindow>
+#include <ww107x.h>
 class RenderRamp;
 class RampDelegate;
 
@@ -46,6 +47,8 @@ private:
     void setCurrentFile(const QString &);
     void readSettings();
     void writeSettings();
+    double buildDataPoints(ViInt32 *data);
+    void checkTaborError(ViStatus status, ViSession vi);
 
     QString curFile;            //!<\brief Current output file name.
     QString curDir;             //!<\brief Cuurent output directory.
@@ -61,3 +64,4 @@ private:
 };
 
 #endif // ARBRAMP_H
+/* arbramp.h */

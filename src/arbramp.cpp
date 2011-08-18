@@ -315,14 +315,44 @@ bool ArbRamp::rearPanelRamp(const QString &fileName) {
         return false;
     }
     //Build data
-    double data[20000];
+    ViInt32 data[20000];
+    double Ttot=buildDataPoints(&data[0]);
+    //Export to file
+    QTextStream out(&file);
+    for(int i=0;i<20000;i++)
+        out << data[i] << " ";
+    statusBar()->showMessage(tr("Rear panel ramp exported"), 2000);
+    //Load to Tabor Device
+    ViChar szResource[256]="ASRL8::INSTR";
+    ViChar channelName[20]="CHAN_A";
+    ViSession vi=VI_NULL;
+    checkTaborError(ww107x_init(szResource,VI_TRUE,VI_TRUE,&vi),vi);
+    checkTaborError(ww107x_ConfigureStandardWaveform(vi,channelName,WW107X_VAL_WFM_SINE,0.1,0.0,6.25e6,0.0),vi);
+    checkTaborError(ww107x_ConfigureFMEnabled(vi,channelName,VI_TRUE),vi);
+    checkTaborError(ww107x_ConfigureFMSource(vi,channelName,WW107X_VAL_FM_INTERNAL),vi);
+    checkTaborError(ww107x_ConfigureFMInternal(vi,100e6,WW107X_VAL_FM_INTERNAL_ARBITRARY,1e-3),vi);
+    checkTaborError(ww107x_ConfigureFMSampleRate(vi,20000/Ttot),vi);
+    checkTaborError(ww107x_ConfigureTriggerSource(vi,channelName,WW107X_VAL_EXTERNAL),vi);
+    checkTaborError(ww107x_ConfigureFMTriggerMode(vi,WW107X_VAL_TRIGGERED),vi);
+    checkTaborError(ww107x_CreateFMArbWaveform(vi,20000,&data[0],0,0),vi);
+    return true;
+}
+void ArbRamp::checkTaborError(ViStatus status, ViSession vi) {
+    if(status == VI_SUCCESS)
+        return;
+    ViChar errMsg[512];
+    ww107x_GetError (vi, &status, sizeof(errMsg), errMsg);
+    QMessageBox::warning(this,tr("Error (%1)").arg(status),tr("%1").arg(errMsg));
+}
+double ArbRamp::buildDataPoints(ViInt32 *data) {
     double Tmax=ui->tableWidget->item(nLines-1,0)->text().toDouble();
+    double magical_factor=10*sqrt(2);
     double step=Tmax/20000;
     double tprev,tnext,fprev,fnext;
     tprev=tnext=0;
     fprev=fnext=ui->tableWidget->item(0,1)->text().toDouble();
-    data[0]=fprev*1e6*10;
-    double c=0;
+    data[0]=(ViInt32)(fprev*1e6*magical_factor);
+    int c=0;
     for(int i=1;i<19999;i++) {
         double t=i*step;
         if(t>tnext) {
@@ -332,14 +362,9 @@ bool ArbRamp::rearPanelRamp(const QString &fileName) {
             tnext=ui->tableWidget->item(c,0)->text().toDouble();
             fnext=ui->tableWidget->item(c,1)->text().toDouble();
         }
-        data[i]=((t-tprev)/(tnext-tprev)*(fnext-fprev)+fprev)*1e6*10;
+        data[i]=(ViInt32)(((t-tprev)/(tnext-tprev)*(fnext-fprev)+fprev)*1e6*magical_factor);
     }
-    data[19999]=ui->tableWidget->item(nLines-1,1)->text().toDouble()*1e6*10;
-    //Export to file
-    QTextStream out(&file);
-    for(int i=0;i<20000;i++)
-        out << data[i] << " ";
-    statusBar()->showMessage(tr("Rear panel ramp exported"), 2000);
-    return true;
+    data[19999]=(ViInt32)(ui->tableWidget->item(nLines-1,1)->text().toDouble()*1e6*magical_factor);
+    return Tmax;
 }
 /* arbramp.cpp */

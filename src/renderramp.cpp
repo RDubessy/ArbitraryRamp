@@ -17,21 +17,18 @@
  * }}} */
 #include <QtGui>
 #include "renderramp.h"
-
 RenderRamp::RenderRamp(QWidget *parent) : QWidget(parent) {
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
     points=0;
     nPoints=0;
 }
-
 QSize RenderRamp::minimumSizeHint() const {
     return QSize(300,100);
 }
 QSize RenderRamp::sizeHint() const {
     return QSize(600,200);
 }
-
 void RenderRamp::updatePoints(const QList<QPoint> &p) {
     nPoints=p.size();
     if(points!=0)
@@ -44,7 +41,6 @@ void RenderRamp::updatePoints(const QList<QPoint> &p) {
     }
     update();
 }
-
 void RenderRamp::paintEvent(QPaintEvent */*event*/) {
     QPainter painter(this);
     painter.setPen(pen);

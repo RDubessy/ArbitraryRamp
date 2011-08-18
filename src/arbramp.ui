@@ -29,12 +29,6 @@
       <attribute name="verticalHeaderDefaultSectionSize">
        <number>30</number>
       </attribute>
-      <attribute name="verticalHeaderDefaultSectionSize">
-       <number>30</number>
-      </attribute>
-      <attribute name="horizontalHeaderDefaultSectionSize">
-       <number>120</number>
-      </attribute>
       <column>
        <property name="text">
         <string>Time [s]</string>
@@ -63,7 +57,7 @@
          <x>0</x>
          <y>0</y>
          <width>578</width>
-         <height>124</height>
+         <height>130</height>
         </rect>
        </property>
       </widget>
@@ -77,7 +71,7 @@
      <x>0</x>
      <y>0</y>
      <width>600</width>
-     <height>23</height>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_Fichier">
@@ -90,8 +84,6 @@
     <addaction name="action_Save"/>
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
-    <addaction name="action_Export"/>
-    <addaction name="separator"/>
     <addaction name="action_Quit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -100,8 +92,16 @@
     </property>
     <addaction name="action_About"/>
    </widget>
+   <widget class="QMenu" name="menuTabor">
+    <property name="title">
+     <string>Tabor</string>
+    </property>
+    <addaction name="action_Export"/>
+    <addaction name="action_Options"/>
+   </widget>
    <addaction name="menu_Fichier"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuTabor"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <property name="toolButtonStyle">
@@ -145,14 +145,14 @@
     <string>&amp;New</string>
    </property>
   </action>
-  <action name="action_Preferences">
-   <property name="text">
-    <string>&amp;Preferences</string>
-   </property>
-  </action>
   <action name="action_Export">
    <property name="text">
     <string>&amp;Export</string>
+   </property>
+  </action>
+  <action name="action_Options">
+   <property name="text">
+    <string>&amp;Options</string>
    </property>
   </action>
  </widget>

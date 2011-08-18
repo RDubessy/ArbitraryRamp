@@ -20,7 +20,6 @@
 #include <QTextEdit>
 #include <QTableWidget>
 #include "rampdelegate.h"
-
 QWidget *RampDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &/* option */,
                                     const QModelIndex & index) const {
     int j=index.column();
@@ -54,7 +53,6 @@ QWidget *RampDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem 
     }
     return new QTextEdit();
 }
-
 void RampDelegate::setEditorData(QWidget *editor,const QModelIndex &index) const {
     QVariant value=index.model()->data(index,Qt::EditRole);
     int j=index.column();
@@ -69,7 +67,6 @@ void RampDelegate::setEditorData(QWidget *editor,const QModelIndex &index) const
         static_cast<QTextEdit*>(editor)->setText(value.toString());
     }
 }
-
 void RampDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
                                    const QModelIndex &index) const {
     int j=index.column();
